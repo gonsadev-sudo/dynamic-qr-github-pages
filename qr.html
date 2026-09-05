@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tạo QR cố định chuẩn in</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --accent: #f05a24;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #dfe3ea;
+      --page: #f4f6fa;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--page); }
+
+    .shell {
+      width: min(1160px, calc(100% - 32px));
+      margin: 40px auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: clamp(24px, 4vw, 40px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 50px rgba(23, 32, 51, .07);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0 0 12px; font-size: clamp(28px, 5vw, 46px); line-height: 1.08; }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    p { color: var(--muted); line-height: 1.65; }
+    .note { margin: 0 0 28px; }
+
+    .field { display: grid; gap: 8px; margin-top: 18px; }
+    label { font-weight: 750; }
+    small { color: var(--muted); line-height: 1.5; }
+
+    input, select {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1px solid #cfd5df;
+      border-radius: 12px;
+      color: var(--ink);
+      background: #fff;
+      font: inherit;
+    }
+
+    input:focus, select:focus {
+      outline: 3px solid rgba(240, 90, 36, .16);
+      border-color: var(--accent);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+
+    button {
+      min-height: 44px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 12px;
+      color: var(--ink);
+      background: #eef1f6;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.primary { color: #fff; background: var(--accent); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    .preview-panel { text-align: center; }
+    .qr-frame {
+      width: min(100%, 420px);
+      aspect-ratio: 1;
+      margin: 18px auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .qr-frame svg { display: block; width: 100%; height: 100%; }
+    .encoded-url { overflow-wrap: anywhere; font-size: 13px; }
+
+    .status {
+      min-height: 24px;
+      margin: 14px 0 0;
+      font-weight: 700;
+      color: #236b42;
+    }
+
+    .status[data-state="error"] { color: #b42318; }
+
+    .checklist {
+      margin: 26px 0 0;
+      padding: 20px;
+      border-radius: 16px;
+      background: #fff7f3;
+      text-align: left;
+    }
+
+    .checklist ul { margin: 10px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.7; }
+
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .shell { width: min(100% - 20px, 1160px); margin: 10px auto; }
+      .panel { border-radius: 18px; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 18mm; }
+      body { background: #fff; }
+      .shell { display: block; width: auto; margin: 0; }
+      .controls-panel, .no-print, .checklist { display: none !important; }
+      .preview-panel { border: 0; box-shadow: none; padding: 0; }
+      .qr-frame { width: 50mm; height: 50mm; border: 0; }
+      .encoded-url { font-size: 9pt; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="panel controls-panel">
+      <p class="eyebrow">Dynamic QR Toolkit</p>
+      <h1>Tạo QR cố định chuẩn in</h1>
+      <p class="note">
+        QR phải mã hóa URL GitHub Pages cố định của dự án, không mã hóa link nội dung từng giai đoạn.
+      </p>
+
+      <form id="qr-form">
+        <div class="field">
+          <label for="qr-url">URL cố định được in trong QR</label>
+          <input id="qr-url" name="qr-url" type="url" inputmode="url" autocomplete="url" required
+                 placeholder="https://ten-tai-khoan.github.io/du-an-qr/">
+          <small>Trang sẽ tự nhận đúng URL khi mở file <strong>qr.html</strong> từ website đã xuất bản.</small>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="error-level">Khả năng sửa lỗi</label>
+            <select id="error-level" name="error-level">
+              <option value="M" selected>M — tiêu chuẩn</option>
+              <option value="Q">Q — môi trường khó</option>
+              <option value="H">H — mức cao</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="png-size">PNG tối thiểu</label>
+            <select id="png-size" name="png-size">
+              <option value="1024">Khoảng 1024 px</option>
+              <option value="2048" selected>Khoảng 2048 px</option>
+              <option value="4096">Khoảng 4096 px</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" type="submit">Tạo / cập nhật QR</button>
+          <button id="download-svg" type="button" disabled>Tải SVG</button>
+          <button id="download-png" type="button" disabled>Tải PNG</button>
+          <button id="print-qr" type="button" disabled>In / lưu PDF</button>
+        </div>
+      </form>
+
+      <div class="checklist">
+        <strong>Thiết lập an toàn cho in ấn</strong>
+        <ul>
+          <li>QR đen nguyên bản trên nền trắng, không biến dạng.</li>
+          <li>Vùng trắng bảo vệ 4 module đã được tạo sẵn.</li>
+          <li>Ưu tiên SVG để đặt vào Illustrator hoặc InDesign.</li>
+          <li>Luôn quét thử bản in mẫu ở đúng kích thước sử dụng.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel preview-panel">
+      <h2>Bản xem trước</h2>
+      <div class="qr-frame" id="qr-preview" aria-label="Bản xem trước mã QR"></div>
+      <p class="encoded-url" id="encoded-url">Chưa có URL.</p>
+      <p class="status" id="status" role="status"></p>
+      <div class="actions no-print" style="justify-content:center">
+        <button id="copy-url" type="button" disabled>Sao chép URL</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.js"></script>
+  <script src="qr-tool.js" defer></script>
+</body>
+</html>

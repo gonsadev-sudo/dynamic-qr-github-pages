@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Đang chuyển hướng…</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --accent: #f05a24;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #e8eaf0;
+      --surface: #ffffff;
+      --page: #f4f6fa;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(240, 90, 36, .13), transparent 32rem),
+        var(--page);
+    }
+
+    .card {
+      width: min(100%, 520px);
+      padding: 36px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--surface);
+      box-shadow: 0 20px 60px rgba(23, 32, 51, .09);
+      text-align: center;
+    }
+
+    .spinner {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 24px;
+      border: 5px solid #f3d6cb;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    h1 { margin: 0 0 10px; font-size: clamp(24px, 5vw, 34px); }
+    p { margin: 0; color: var(--muted); line-height: 1.6; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .button {
+      min-height: 44px;
+      padding: 11px 18px;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .button--primary { color: #fff; background: var(--accent); }
+    .button--secondary { color: var(--ink); background: #eef1f6; }
+    [hidden] { display: none !important; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+  </style>
+</head>
+<body>
+  <main class="card" id="app" aria-live="polite">
+    <div class="spinner" id="spinner" aria-hidden="true"></div>
+    <h1 id="heading">Đang mở nội dung hiện tại</h1>
+    <p id="status">Hệ thống đang kiểm tra giai đoạn mới nhất. Vui lòng đợi trong giây lát.</p>
+
+    <div class="actions" id="actions" hidden>
+      <a class="button button--primary" id="target-link" href="#" rel="noopener noreferrer">Mở nội dung</a>
+      <button class="button button--secondary" id="retry" type="button">Thử lại</button>
+    </div>
+  </main>
+
+  <noscript>
+    <p style="position:fixed;left:16px;right:16px;bottom:16px;text-align:center">
+      Trình duyệt cần bật JavaScript để mở liên kết của dự án.
+    </p>
+  </noscript>
+  <script src="redirect.js" defer></script>
+</body>
+</html>
