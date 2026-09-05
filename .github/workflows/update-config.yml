@@ -1,0 +1,107 @@
+name: Cập nhật link đích QR
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Link HTTPS của nội dung giai đoạn mới"
+        required: true
+        type: string
+      stage_name:
+        description: "Tên giai đoạn hiển thị trong chế độ kiểm tra"
+        required: true
+        type: string
+
+concurrency:
+  group: update-qr-config
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tải repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Kiểm tra dữ liệu đầu vào
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
+          STAGE_NAME: ${{ inputs.stage_name }}
+          FIXED_URL: https://gonsadev-sudo.github.io/dynamic-qr-github-pages/
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+          from urllib.parse import urlsplit
+
+          target = os.environ["TARGET_URL"].strip()
+          stage = os.environ["STAGE_NAME"].strip()
+          fixed = os.environ["FIXED_URL"]
+
+          if not target:
+              sys.exit("target_url không được để trống.")
+          if len(target) > 2048:
+              sys.exit("target_url không được dài quá 2048 ký tự.")
+          parsed = urlsplit(target)
+          if parsed.scheme.lower() != "https" or not parsed.hostname:
+              sys.exit("target_url phải là một URL HTTPS đầy đủ.")
+          if any(character.isspace() for character in target):
+              sys.exit("target_url không được chứa khoảng trắng.")
+          if not stage:
+              sys.exit("stage_name không được để trống.")
+          if len(stage) > 120:
+              sys.exit("stage_name không được dài quá 120 ký tự.")
+
+          def comparable(value):
+              item = urlsplit(value)
+              path = re.sub(r"/index\.html$", "/", item.path or "/", flags=re.IGNORECASE)
+              path = path.rstrip("/") or "/"
+              port = item.port or (443 if item.scheme.lower() == "https" else None)
+              return (item.scheme.lower(), item.hostname.lower(), port, path)
+
+          if comparable(target) == comparable(fixed):
+              sys.exit("target_url không được trỏ về chính URL QR cố định.")
+          PY
+
+      - name: Ghi config.json
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
+          STAGE_NAME: ${{ inputs.stage_name }}
+        run: |
+          UPDATED_AT="$(TZ=Asia/Ho_Chi_Minh date --iso-8601=seconds)"
+          jq -n \
+            --arg target "$TARGET_URL" \
+            --arg stage "$STAGE_NAME" \
+            --arg updated "$UPDATED_AT" \
+            '{targetUrl: $target, stageName: $stage, updatedAt: $updated}' \
+            > config.json
+
+      - name: Commit và push
+        env:
+          STAGE_NAME: ${{ inputs.stage_name }}
+        run: |
+          if git diff --quiet -- config.json; then
+            echo "Link đích không thay đổi; không tạo commit mới."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config.json
+          git commit -m "Cập nhật link đích QR" -m "Giai đoạn: ${STAGE_NAME}"
+          git push origin HEAD:main
+
+      - name: Hiển thị link kiểm tra
+        run: |
+          {
+            echo "## Đã cập nhật cấu hình"
+            echo
+            echo "GitHub Pages sẽ xuất bản thay đổi sau khi build hoàn tất."
+            echo
+            echo "[Mở chế độ kiểm tra](https://gonsadev-sudo.github.io/dynamic-qr-github-pages/?preview=1)"
+          } >> "$GITHUB_STEP_SUMMARY"

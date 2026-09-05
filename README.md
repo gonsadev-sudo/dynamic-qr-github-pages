@@ -122,6 +122,21 @@ Trang sẽ tự nhận URL cố định `/du-an-qr/` và tạo QR. Chọn **Tả
 
 **Không tạo lại QR** khi chỉ thay `targetUrl`.
 
+## 6.1. Cập nhật nhanh cho admin không lập trình
+
+Repository có workflow `Cập nhật link đích QR` để admin cập nhật mà không cần mở JSON, GitHub Desktop hoặc dòng lệnh.
+
+1. Đăng nhập GitHub bằng tài khoản có quyền ghi vào repository.
+2. Mở [workflow cập nhật QR](https://github.com/gonsadev-sudo/dynamic-qr-github-pages/actions/workflows/update-config.yml).
+3. Chọn **Run workflow**.
+4. Nhập link HTTPS mới và tên giai đoạn.
+5. Chọn **Run workflow** lần nữa.
+6. Chờ workflow có dấu xanh, sau đó mở:
+
+   `https://gonsadev-sudo.github.io/dynamic-qr-github-pages/?preview=1`
+
+Workflow tự kiểm tra URL, ghi `updatedAt`, chỉ sửa `config.json` và commit vào `main`. Admin không cần tạo token riêng; GitHub Actions sử dụng quyền `GITHUB_TOKEN` của workflow. Nếu có người khác đang cập nhật, workflow sẽ xếp hàng để tránh ghi đè.
+
 ## 7. Tiêu chuẩn và lưu ý in ấn
 
 - Ưu tiên file **SVG**. Có thể phóng lớn/thu nhỏ mà không vỡ nét.
